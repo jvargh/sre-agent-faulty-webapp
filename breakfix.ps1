@@ -250,6 +250,15 @@ GO
     }
     
     Write-Host ""
+    
+    # Restart App Service to clear connection pool
+    Write-Host "[3/3] Restarting App Service to clear connection pool..." -ForegroundColor Yellow
+    Write-Host "  Note: This forces the app to attempt new connections" -ForegroundColor DarkGray
+    az webapp restart --name $AppServiceName --resource-group $ResourceGroup 2>&1 | Out-Null
+    Write-Host "  ✓ App Service restarted" -ForegroundColor Red
+    Write-Host "  Impact: Existing pooled connections cleared, errors will be immediate" -ForegroundColor DarkRed
+    Write-Host ""
+    
     Write-Host "========================================" -ForegroundColor Red
     Write-Host "  SYSTEM BROKEN!" -ForegroundColor Red
     Write-Host "========================================" -ForegroundColor Red
@@ -262,6 +271,9 @@ GO
     Write-Host "Root Causes Introduced:" -ForegroundColor Yellow
     Write-Host "  1. Private DNS Zone not linked to VNet → DNS resolution fails" -ForegroundColor Gray
     Write-Host "  2. Managed identity user not in SQL Database → AAD auth fails" -ForegroundColor Gray
+    Write-Host "  3. Connection pool cleared → Errors are immediate (not intermittent)" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "Note: Wait 30-45 seconds for app to fully restart before testing" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "Diagnose with:" -ForegroundColor Cyan
     Write-Host "  .\breakfix.ps1 -Action diagnose" -ForegroundColor White

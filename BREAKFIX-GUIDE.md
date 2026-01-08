@@ -312,6 +312,67 @@ Start-Sleep 30
 - Without understanding the impact
 - Without ability to fix if something goes wrong
 
+## ⚠️ Important: Connection Pooling Behavior
+
+### Intermittent Failures After Breaking
+
+**Symptom:** After running `.\breakfix.ps1 -Action break`, you may observe:
+- `/health/sql` sometimes returns `"status":"healthy"`
+- Web page intermittently shows "Error loading products" then successfully loads data
+- System appears to work sporadically instead of failing consistently
+
+**Root Cause:** 
+.NET SQL connection pooling keeps existing database connections alive in memory. These pooled connections continue functioning even after:
+- Private DNS Zone VNet link is removed
+- SQL user credentials are deleted
+- Network infrastructure is modified
+
+**Why This Happens:**
+1. Existing connections in the pool bypass new authentication/DNS resolution
+2. When a pooled connection is reused → Request succeeds
+3. When pool needs a new connection → Request fails
+4. This creates intermittent, unpredictable behavior
+
+**Solution:**
+The break script automatically restarts the App Service (step 3/3) to:
+- Clear all connection pools
+- Force every request to establish new connections
+- Ensure consistent failure behavior
+
+**Wait Time Required:**
+Allow **30-45 seconds** after the break script completes for:
+- App Service to fully restart
+- Connection pools to clear
+- New connection attempts to fail consistently
+
+### Testing Procedure
+```powershell
+# 1. Run break script (includes automatic restart)
+.\breakfix.ps1 -Action break
+
+# 2. Wait for app restart and pool clearing
+Start-Sleep -Seconds 45
+
+# 3. Test - should now consistently fail
+curl https://app-y7njcffivri2q.azurewebsites.net/health/sql
+```
+
+**Expected Response (after restart):**
+```json
+{
+  "status": "unhealthy",
+  "error": "Connection was denied because Deny Public Network Access is set to Yes",
+  "errorType": "SqlException",
+  "errorNumber": 47073
+}
+```
+
+If you still see "healthy" responses, manually restart:
+```powershell
+az webapp restart --name app-y7njcffivri2q --resource-group sre-demo2-rg
+Start-Sleep -Seconds 45
+```
+
 ## Requirements
 
 - Azure CLI installed and authenticated
