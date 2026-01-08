@@ -1,0 +1,81 @@
+# Build results
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.cache
+*.log
+*.DotSettings.user
+
+# User secrets and sensitive configuration
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+local.settings.json
+secrets.json
+*.secrets.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Azure and cloud credentials
+*.publishsettings
+*.azurePubxml
+*.pubxml
+*.PublishSettings
+publish/
+PublishProfiles/
+
+# Certificates and keys
+*.pfx
+*.p12
+*.key
+*.pem
+*.cer
+*.crt
+*.der
+*.p7b
+*.spc
+
+# SSH keys
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.ppk
+
+# Database files (if local)
+*.mdf
+*.ldf
+*.sqlite
+*.db
+
+# Sensitive Azure files
+.azure/
+azds.yaml
+charts/
+
+# Backup files
+*.bak
+*.backup
+
+# Passwords and secrets
+*password*
+*secret*
+*credentials*
+*apikey*
+*token*
+!*.cs
+!*.md
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

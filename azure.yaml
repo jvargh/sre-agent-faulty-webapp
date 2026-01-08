@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: faultywebapp
+metadata:
+  template: faultywebapp@0.0.1-beta
+
+services:
+  web:
+    project: .
+    language: dotnet
+    host: appservice
+
+hooks:
+  postprovision:
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "Configuring SQL Database permissions..."
+        $sqlServer = azd env get-value AZURE_SQL_SERVER_NAME
+        $dbName = azd env get-value AZURE_SQL_DATABASE_NAME
+        $webAppName = azd env get-value AZURE_WEBAPP_NAME
+        
+        # Get the managed identity principal ID
+        $principalId = az webapp identity show --name $webAppName --resource-group $Env:AZURE_RESOURCE_GROUP --query principalId -o tsv
+        
+        # Get current user's object ID for SQL admin
+        $currentUserId = az ad signed-in-user show --query id -o tsv
+        
+        Write-Host "Managed Identity Principal ID: $principalId"
+        Write-Host "Setting up database permissions..."
+        
+        # Note: SQL permissions must be set manually or via a separate script with SQL authentication
+        Write-Host "Please run the following SQL commands as an Entra ID admin:"
+        Write-Host "CREATE USER [$webAppName] FROM EXTERNAL PROVIDER;"
+        Write-Host "ALTER ROLE db_datareader ADD MEMBER [$webAppName];"
+        Write-Host "ALTER ROLE db_datawriter ADD MEMBER [$webAppName];"
+        Write-Host "ALTER ROLE db_ddladmin ADD MEMBER [$webAppName];"
+      continueOnError: false
+    posix:
+      shell: sh
+      run: |
+        echo "Configuring SQL Database permissions..."
+        echo "Please run SQL commands manually to grant database access to the managed identity"
+      continueOnError: false
