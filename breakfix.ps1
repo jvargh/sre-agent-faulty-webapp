@@ -389,16 +389,16 @@ GO
     Write-Host "Expected Result:" -ForegroundColor Green
     Write-Host "  • status: healthy" -ForegroundColor Gray
     Write-Host "  • connectionState: Open" -ForegroundColor Gray
-    Write-Host "  • ddiagnose") {
-        Invoke-Diagnose
-    }
-    elseif ($Action -eq "atabase: $DatabaseName" -ForegroundColor Gray
+    Write-Host "  • database: $DatabaseName" -ForegroundColor Gray
     Write-Host ""
 }
 
 # Main execution
 try {
-    if ($Action -eq "break") {
+    if ($Action -eq "diagnose") {
+        Invoke-Diagnose
+    }
+    elseif ($Action -eq "break") {
         Invoke-Break
     }
     elseif ($Action -eq "fix") {
