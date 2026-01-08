@@ -23,7 +23,8 @@
 
 ### Application URLs
 - **Application:** https://app-y7njcffivri2q.azurewebsites.net
-- **Health Check:** https://app-y7njcffivri2q.azurewebsites.net/health
+- **Health Check (General):** https://app-y7njcffivri2q.azurewebsites.net/health
+- **Health Check (SQL):** https://app-y7njcffivri2q.azurewebsites.net/health/sql
 - **API Endpoint:** https://app-y7njcffivri2q.azurewebsites.net/api/products
 
 ### Resource Names
@@ -210,6 +211,16 @@ az sql server update `
 Wait 30 seconds, then test again to verify private endpoint works.
 
 **✅ Fully secured with private endpoint only!**
+
+#### Test Endpoints
+
+```powershell
+# Test general health (checks overall app health including DB)
+Invoke-WebRequest -Uri "https://app-y7njcffivri2q.azurewebsites.net/health" -UseBasicParsing
+
+# Test SQL-specific health (detailed SQL connection diagnostics)
+Invoke-WebRequest -Uri "https://app-y7njcffivri2q.azurewebsites.net/health/sql" -UseBasicParsing
+
 # Test API endpoint
 Invoke-WebRequest -Uri "https://app-y7njcffivri2q.azurewebsites.net/api/products" -UseBasicParsing
 ```
@@ -371,6 +382,65 @@ The home page includes a fully functional product management dashboard:
 - Delete button sends DELETE request to API
 - Empty state shows when no products exist
 
+### Health Check Endpoints
+
+The application provides two health check endpoints for monitoring:
+
+#### `/health` - General Health Check
+- **Purpose:** Overall application health including database connectivity
+- **Response:** Simple "Healthy" or "Unhealthy" text
+- **Use Case:** Load balancer health probes, basic monitoring
+
+**Example:**
+```powershell
+curl https://app-y7njcffivri2q.azurewebsites.net/health
+# Response: "Healthy"
+```
+
+#### `/health/sql` - SQL Connection Health Check
+- **Purpose:** Detailed SQL database connection diagnostics
+- **Response:** JSON with comprehensive connection status
+- **Use Case:** Troubleshooting SQL issues, detailed monitoring
+
+**Healthy Response:**
+```json
+{
+  "status": "healthy",
+  "message": "SQL connection successful",
+  "connectionState": "Open",
+  "database": "FaultyWebAppDb",
+  "serverVersion": "16.0.0.0"
+}
+```
+
+**Unhealthy Response (SQL Error):**
+```json
+{
+  "status": "unhealthy",
+  "error": "Login failed for user 'app-y7njcffivri2q'",
+  "errorType": "SqlException",
+  "errorNumber": 18456,
+  "errorClass": 14,
+  "state": 1
+}
+```
+
+**Unhealthy Response (Authentication Error):**
+```json
+{
+  "status": "unhealthy",
+  "error": "Authentication failed",
+  "errorType": "AuthenticationException"
+}
+```
+
+**Features:**
+- ✅ Tests managed identity token acquisition
+- ✅ Verifies SQL connection with authentication
+- ✅ Checks Products table existence
+- ✅ Returns detailed error information for troubleshooting
+- ✅ Logs errors for diagnostics
+
 ### Technical Details
 
 **Token-based Authentication (Program.cs):**
@@ -415,6 +485,52 @@ sqlConnection.AccessToken = token.Token; // No password!
    - `Login failed` - Permissions not granted
 
 **Fix:**
+```powershell
+# Restart app to trigger auto-migration
+az webapp restart --name app-y7njcffivri2q --resource-group sre-demo2-rg
+```
+
+**Diagnostic:** Check `/health/sql` endpoint for detailed SQL connection status:
+```powershell
+curl https://app-y7njcffivri2q.azurewebsites.net/health/sql
+```
+
+---
+
+### Issue: Health Check Returns "Unhealthy"
+
+**Symptoms:** `/health` or `/health/sql` returns unhealthy status
+
+**Cause:** Multiple possible causes
+
+**Diagnostic Steps:**
+1. **Check detailed SQL health:**
+   ```powershell
+   Invoke-RestMethod -Uri "https://app-y7njcffivri2q.azurewebsites.net/health/sql"
+   ```
+
+2. **Review error response:**
+   - `errorType: "SqlException"` - SQL connection/permission issue
+   - `errorType: "AuthenticationException"` - Managed identity token issue
+   - `errorNumber: 18456` - Login failed (check permissions)
+   - `errorNumber: 208` - Table doesn't exist (restart app)
+
+**Solutions by Error Type:**
+
+**SQL Login Error (18456):**
+```sql
+-- Grant permissions via Azure Portal Query Editor
+ALTER ROLE db_datareader ADD MEMBER [app-y7njcffivri2q];
+ALTER ROLE db_datawriter ADD MEMBER [app-y7njcffivri2q];
+GO
+```
+
+**Authentication Error:**
+- Verify managed identity is enabled on App Service
+- Check VNet integration is configured
+- Ensure private endpoint DNS resolution works
+
+**Table Missing (208):**
 ```powershell
 # Restart app to trigger auto-migration
 az webapp restart --name app-y7njcffivri2q --resource-group sre-demo2-rg
