@@ -7,9 +7,15 @@
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center">
                 <h1 class="display-4">Product Dashboard</h1>
-                <div id="healthStatus" class="d-flex align-items-center">
-                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                    <span>Checking health...</span>
+                <div class="d-flex align-items-center gap-3">
+                    <a id="appHealthIcon" href="/health" target="_blank" class="btn btn-outline-secondary btn-sm" title="App Health">
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span class="ms-2">App</span>
+                    </a>
+                    <a id="sqlHealthIcon" href="/health/sql" target="_blank" class="btn btn-outline-secondary btn-sm" title="SQL Health">
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span class="ms-2">SQL</span>
+                    </a>
                 </div>
             </div>
             <p class="lead text-muted">Secure .NET 8 Web App with Azure SQL (Private Endpoint + Managed Identity)</p>
@@ -117,49 +123,65 @@
 </div>
 
 <style>
-    .health-indicator {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 8px;
-        animation: pulse 2s infinite;
+    .health-icon-healthy {
+        border-color: #28a745 !important;
+        color: #28a745 !important;
+        background-color: rgba(40, 167, 69, 0.1);
     }
-    .health-healthy {
-        background-color: #28a745;
-        box-shadow: 0 0 8px rgba(40, 167, 69, 0.6);
+    .health-icon-unhealthy {
+        border-color: #dc3545 !important;
+        color: #dc3545 !important;
+        background-color: rgba(220, 53, 69, 0.1);
     }
-    .health-unhealthy {
-        background-color: #dc3545;
-        box-shadow: 0 0 8px rgba(220, 53, 69, 0.6);
-    }
-    @@keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
+    .health-icon-offline {
+        border-color: #6c757d !important;
+        color: #6c757d !important;
+        background-color: rgba(108, 117, 125, 0.1);
     }
 </style>
 
 <script>
     let healthCheckInterval;
 
-    // Check health status
+    // Check health status for both App and SQL
     async function checkHealth() {
+        // Check App Health
         try {
-            const response = await fetch('/health');
-            const isHealthy = response.ok;
-            const statusText = isHealthy ? 'Healthy' : 'Unhealthy';
-            const statusClass = isHealthy ? 'health-healthy' : 'health-unhealthy';
-            const textClass = isHealthy ? 'text-success' : 'text-danger';
+            const appResponse = await fetch('/health');
+            const isHealthy = appResponse.ok;
+            const appIcon = document.getElementById('appHealthIcon');
             
-            document.getElementById('healthStatus').innerHTML = `
-                <span class="health-indicator ${statusClass}"></span>
-                <strong class="${textClass}">System ${statusText}</strong>
-            `;
+            if (isHealthy) {
+                appIcon.className = 'btn btn-outline-success btn-sm health-icon-healthy';
+                appIcon.innerHTML = '<span class="me-2">✓</span><span>App</span>';
+            } else {
+                appIcon.className = 'btn btn-outline-danger btn-sm health-icon-unhealthy';
+                appIcon.innerHTML = '<span class="me-2">✗</span><span>App</span>';
+            }
         } catch (error) {
-            document.getElementById('healthStatus').innerHTML = `
-                <span class="health-indicator health-unhealthy"></span>
-                <strong class="text-danger">System Offline</strong>
-            `;
+            const appIcon = document.getElementById('appHealthIcon');
+            appIcon.className = 'btn btn-outline-secondary btn-sm health-icon-offline';
+            appIcon.innerHTML = '<span class="me-2">⚠</span><span>App</span>';
+        }
+
+        // Check SQL Health
+        try {
+            const sqlResponse = await fetch('/health/sql');
+            const data = await sqlResponse.json();
+            const isHealthy = data.status === 'healthy';
+            const sqlIcon = document.getElementById('sqlHealthIcon');
+            
+            if (isHealthy) {
+                sqlIcon.className = 'btn btn-outline-success btn-sm health-icon-healthy';
+                sqlIcon.innerHTML = '<span class="me-2">✓</span><span>SQL</span>';
+            } else {
+                sqlIcon.className = 'btn btn-outline-danger btn-sm health-icon-unhealthy';
+                sqlIcon.innerHTML = '<span class="me-2">✗</span><span>SQL</span>';
+            }
+        } catch (error) {
+            const sqlIcon = document.getElementById('sqlHealthIcon');
+            sqlIcon.className = 'btn btn-outline-secondary btn-sm health-icon-offline';
+            sqlIcon.innerHTML = '<span class="me-2">⚠</span><span>SQL</span>';
         }
     }
 
