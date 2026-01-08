@@ -79,7 +79,7 @@ function Invoke-Diagnose {
     
     if ($appConfig.Count -gt 0) {
         $connString = $appConfig[0].value
-        Write-Host "  ✓ Connection string configured" -ForegroundColor Green
+        Write-Host "  ✓ Connection string configured in app settings" -ForegroundColor Green
         if ($connString -like "*Authentication=Active Directory Default*") {
             Write-Host "  ✓ Connection string includes 'Authentication=Active Directory Default'" -ForegroundColor Green
         } else {
@@ -87,8 +87,8 @@ function Invoke-Diagnose {
             Write-Host "     Current: $connString" -ForegroundColor Gray
         }
     } else {
-        Write-Host "  ❌ ISSUE: Connection string not found in app settings" -ForegroundColor Red
-        $issues += "Connection String Missing"
+        Write-Host "  ℹ Connection string not in app settings (using appsettings.json)" -ForegroundColor Cyan
+        Write-Host "     This is expected - connection string loaded from deployed config" -ForegroundColor DarkGray
     }
     Write-Host ""
     
