@@ -87,6 +87,19 @@ module webapp './modules/webapp.bicep' = {
   }
 }
 
+// Monitoring and alerts
+module monitoring './modules/monitoring.bicep' = {
+  scope: rg
+  name: 'monitoring-deployment'
+  params: {
+    location: location
+    resourceToken: resourceToken
+    webAppName: webapp.outputs.webAppName
+    webAppUrl: webapp.outputs.webAppUrl
+    tags: tags
+  }
+}
+
 // Outputs for azd
 output AZURE_LOCATION string = location
 output AZURE_RESOURCE_GROUP string = rg.name
@@ -95,3 +108,5 @@ output AZURE_SQL_DATABASE_NAME string = sqlDatabaseName
 output AZURE_WEBAPP_NAME string = webapp.outputs.webAppName
 output AZURE_WEBAPP_URL string = webapp.outputs.webAppUrl
 output AZURE_WEBAPP_IDENTITY_PRINCIPAL_ID string = webapp.outputs.managedIdentityPrincipalId
+output AZURE_APPINSIGHTS_NAME string = monitoring.outputs.appInsightsName
+output AZURE_APPINSIGHTS_CONNECTION_STRING string = monitoring.outputs.appInsightsConnectionString
