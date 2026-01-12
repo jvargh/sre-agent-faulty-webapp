@@ -123,11 +123,11 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
 
 // Metric Alert Rule for Availability Test Failures
 resource availabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
-  name: 'alert-health-unavailable-${resourceToken}'
+  name: 'SQL-Health-Endpoint-Unavailable-MultiRegion-${resourceToken}'
   location: 'global'
   tags: tags
   properties: {
-    description: 'Alert when SQL health endpoint becomes unhealthy or unavailable'
+    description: 'Critical: SQL health endpoint is failing availability checks from multiple Azure regions'
     severity: 1 // Critical
     enabled: true
     scopes: [
@@ -153,12 +153,12 @@ resource availabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
 
 // Scheduled Query Alert for Unhealthy Status Detection
 resource unhealthyStatusAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
-  name: 'alert-health-status-unhealthy-${resourceToken}'
+  name: 'SQL-Database-Connection-Unhealthy-${resourceToken}'
   location: location
   tags: tags
   properties: {
-    displayName: 'SQL Health Status Unhealthy'
-    description: 'Alert when /health/sql endpoint returns unhealthy status'
+    displayName: 'SQL Database Connection Unhealthy'
+    description: 'Critical: Application cannot connect to SQL database - check private endpoint, DNS, and managed identity'
     severity: 1 // Critical
     enabled: true
     evaluationFrequency: 'PT5M' // Every 5 minutes
@@ -197,11 +197,11 @@ availabilityResults
 
 // App Service Metric Alert - High HTTP 5xx errors
 resource http5xxAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
-  name: 'alert-http-5xx-${resourceToken}'
+  name: 'App-Service-HTTP-Server-Errors-Spike-${resourceToken}'
   location: 'global'
   tags: tags
   properties: {
-    description: 'Alert when App Service returns high number of 5xx errors'
+    description: 'Warning: App Service experiencing high rate of HTTP 5xx server errors (>10 in 5 minutes)'
     severity: 2 // Warning
     enabled: true
     scopes: [
@@ -234,11 +234,11 @@ resource http5xxAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
 
 // App Service Metric Alert - High Response Time
 resource responseTimeAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
-  name: 'alert-response-time-${resourceToken}'
+  name: 'App-Service-Slow-Response-Time-${resourceToken}'
   location: 'global'
   tags: tags
   properties: {
-    description: 'Alert when App Service response time is too high'
+    description: 'Info: App Service response time exceeds threshold (>5 seconds average) - check database performance'
     severity: 3 // Informational
     enabled: true
     scopes: [

@@ -83,6 +83,7 @@ module webapp './modules/webapp.bicep' = {
     vnetIntegrationSubnetId: network.outputs.appServiceIntegrationSubnetId
     sqlServerFqdn: sql.outputs.sqlServerFqdn
     sqlDatabaseName: sqlDatabaseName
+    appInsightsConnectionString: ''
     tags: tags
   }
 }
@@ -97,6 +98,16 @@ module monitoring './modules/monitoring.bicep' = {
     webAppName: webapp.outputs.webAppName
     webAppUrl: webapp.outputs.webAppUrl
     tags: tags
+  }
+}
+
+// Update webapp with Application Insights connection string
+module webappConfig './modules/webapp-config.bicep' = {
+  scope: rg
+  name: 'webapp-config-deployment'
+  params: {
+    webAppName: webapp.outputs.webAppName
+    appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
   }
 }
 

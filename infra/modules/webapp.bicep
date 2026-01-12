@@ -16,6 +16,9 @@ param sqlServerFqdn string
 @description('SQL Database name')
 param sqlDatabaseName string
 
+@description('Application Insights connection string')
+param appInsightsConnectionString string = ''
+
 @description('Tags to apply to resources')
 param tags object = {}
 
@@ -71,6 +74,18 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'WEBSITE_HTTPLOGGING_RETENTION_DAYS'
           value: '7'
+        }
+        {
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: appInsightsConnectionString
+        }
+        {
+          name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
+          value: '~3'
+        }
+        {
+          name: 'XDT_MicrosoftApplicationInsights_Mode'
+          value: 'recommended'
         }
       ]
       connectionStrings: [
